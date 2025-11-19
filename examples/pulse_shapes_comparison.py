@@ -78,7 +78,7 @@ for shape_key, shape_info in pulse_shapes.items():
     )
 
     results[shape_key] = result
-    print(f"  ✓ Complete")
+    print("  ✓ Complete")
 
 print("\n" + "=" * 70)
 

@@ -11,7 +11,7 @@ arbitrary pulse sequences in NMR/ESR experiments.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -90,7 +90,7 @@ class QuantumEvolution:
             if params.duration is None:
                 raise ValueError("Soft pulse requires duration parameter")
 
-            theta_z = delta * params.duration
+            # theta_z = delta * params.duration  # Computed but not used
             if abs(params.phase) > 1e-12:
                 pulse_op = np.cos(params.phase) * SX + np.sin(params.phase) * SY
             else:
@@ -288,7 +288,6 @@ class SpinEchoSimulator:
 
         # Aggregate results with distribution weighting
         observables = sequence.detection_params.observables
-        time_points = sequence.detection_params.num_points
 
         final_signals = {}
         for obs in observables:

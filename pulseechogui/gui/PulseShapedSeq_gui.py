@@ -13,12 +13,11 @@ import queue
 import threading
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from pulseseq import ShapedPulseSequence, ShapedSpinEchoSimulator, plot_pulse_shape
+from pulseseq import ShapedPulseSequence, ShapedSpinEchoSimulator
 from tkinter import messagebox, ttk
 
 
@@ -1294,7 +1293,7 @@ class PulseExplorerGUI:
 def main():
     """Main function to run the GUI."""
     root = tk.Tk()
-    app = PulseExplorerGUI(root)
+    _app = PulseExplorerGUI(root)  # noqa: F841
     root.mainloop()
 
 

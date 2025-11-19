@@ -31,7 +31,7 @@ def launch_shaped_pulse_gui():
     from .PulseShapedSeq_gui import PulseExplorerGUI
 
     root = tk.Tk()
-    app = PulseExplorerGUI(root)
+    _app = PulseExplorerGUI(root)  # noqa: F841
     root.mainloop()
 
 

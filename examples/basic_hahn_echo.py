@@ -76,7 +76,7 @@ print(f"✓ Sequence created with {len(sequence.operations)} operations")
 # RUN SIMULATION
 # ============================================================================
 
-print(f"\nRunning simulation...")
+print("\nRunning simulation...")
 print(f"  Linewidth: {linewidth}")
 print(f"  Detuning points: {detuning_points}")
 print(f"  Parallel jobs: {n_jobs}")
@@ -104,7 +104,7 @@ echo_time_expected = 2 * tau
 echo_index = np.argmin(np.abs(time - echo_time_expected))
 echo_amplitude = result["sy"][echo_index]
 
-print(f"\nResults:")
+print("\nResults:")
 print(f"  Expected echo time: {echo_time_expected:.2f}")
 print(f"  Echo amplitude: {echo_amplitude:.4f}")
 print(f"  Echo efficiency: {abs(echo_amplitude)*100:.1f}%")

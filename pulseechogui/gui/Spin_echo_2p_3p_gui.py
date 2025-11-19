@@ -18,7 +18,7 @@ import tkinter as tk
 from joblib import Parallel, delayed
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from scipy.linalg import expm
-from tkinter import filedialog, messagebox, ttk
+from tkinter import messagebox, ttk
 
 # Pauli matrices
 sz = 0.5 * np.array([[1, 0], [0, -1]], dtype=complex)
@@ -53,7 +53,7 @@ def apply_pulse(rho, theta_x, delta, pulse_duration, pulse_type="hard", phase=0.
         U = evolution_operator(theta_x, 0, phase)
         return U.conj().T @ rho @ U
     else:  # soft pulse
-        theta_z = delta * pulse_duration
+        # theta_z = delta * pulse_duration  # Computed but not used
         if abs(phase) > 1e-12:
             pulse_op = np.cos(phase) * sx + np.sin(phase) * sy
         else:
@@ -1201,10 +1201,6 @@ class SpinEchoGUI:
         ):
             return
 
-        # Import Set1 colormap from matplotlib
-        import matplotlib.cm as cm
-        from matplotlib.colors import to_rgba
-
         # Get Set1 colors
         set1_colors = plt.cm.Set1.colors
         color_sx = set1_colors[0]  # Red
@@ -1428,7 +1424,7 @@ class SpinEchoGUI:
 
 def main():
     root = tk.Tk()
-    app = SpinEchoGUI(root)
+    _app = SpinEchoGUI(root)  # noqa: F841
     root.mainloop()
 
 

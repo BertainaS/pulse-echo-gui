@@ -7,7 +7,6 @@ allowing users to switch between English and French.
 
 import gettext
 import locale
-import os
 from pathlib import Path
 from typing import Optional
 
