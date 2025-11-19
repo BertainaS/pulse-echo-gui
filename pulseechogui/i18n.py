@@ -11,7 +11,6 @@ import os
 from pathlib import Path
 from typing import Optional
 
-
 # Package directory
 PACKAGE_DIR = Path(__file__).parent
 LOCALE_DIR = PACKAGE_DIR / "locales"

@@ -29,14 +29,14 @@ __email__ = "sylvain.bertaina@cnrs.fr"
 
 # Import core simulation modules
 from .core import (
-    ShapedPulseSequence,
-    ShapedSpinEchoSimulator,
-    PulseShapeFactory,
-    plot_pulse_shape,
-    SequenceBuilder,
-    PulseParameters,
     DelayParameters,
     DetectionParameters,
+    PulseParameters,
+    PulseShapeFactory,
+    SequenceBuilder,
+    ShapedPulseSequence,
+    ShapedSpinEchoSimulator,
+    plot_pulse_shape,
 )
 
 # Import GUI launchers
@@ -48,29 +48,29 @@ from .gui import (
 
 __all__ = [
     # Version info
-    '__version__',
-    '__author__',
-    '__email__',
-
+    "__version__",
+    "__author__",
+    "__email__",
     # Core simulation classes
-    'ShapedPulseSequence',
-    'ShapedSpinEchoSimulator',
-    'PulseShapeFactory',
-    'plot_pulse_shape',
-    'SequenceBuilder',
-    'PulseParameters',
-    'DelayParameters',
-    'DetectionParameters',
-
+    "ShapedPulseSequence",
+    "ShapedSpinEchoSimulator",
+    "PulseShapeFactory",
+    "plot_pulse_shape",
+    "SequenceBuilder",
+    "PulseParameters",
+    "DelayParameters",
+    "DetectionParameters",
     # GUI launchers
-    'launch_basic_gui',
-    'launch_basic_gui_single',
-    'launch_shaped_pulse_gui',
+    "launch_basic_gui",
+    "launch_basic_gui_single",
+    "launch_shaped_pulse_gui",
 ]
+
 
 def get_version():
     """Return the version of PulseEchoGui."""
     return __version__
+
 
 def validate_installation():
     """
@@ -86,7 +86,7 @@ def validate_installation():
     ImportError
         If a required dependency is missing
     """
-    required = ['numpy', 'scipy', 'matplotlib', 'joblib']
+    required = ["numpy", "scipy", "matplotlib", "joblib"]
     missing = []
 
     for package in required:

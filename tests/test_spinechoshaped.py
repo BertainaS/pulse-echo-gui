@@ -5,8 +5,9 @@ Tests the shaped pulse framework including ShapedPulseSequence,
 ShapedSpinEchoSimulator, and pulse shape generation.
 """
 
-import pytest
 import numpy as np
+import pytest
+
 from pulseechogui import ShapedPulseSequence, ShapedSpinEchoSimulator
 
 
@@ -178,9 +179,7 @@ class TestPhysicsValidation:
         result = sim.simulate_sequence(seq, linewidth=2.0, detuning_points=11)
 
         # Total magnetization should be roughly constant
-        total_mag = np.sqrt(
-            result["Sx"] ** 2 + result["Sy"] ** 2 + result["Sz"] ** 2
-        )
+        total_mag = np.sqrt(result["Sx"] ** 2 + result["Sy"] ** 2 + result["Sz"] ** 2)
         # Allow some variation due to numerical integration
         assert np.std(total_mag) < 0.2
 

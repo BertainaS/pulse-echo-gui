@@ -13,12 +13,13 @@ Advanced spin echo simulation supporting arbitrary pulse shapes including:
 @author: sylvainbertaina
 """
 
-import numpy as np
-from scipy.linalg import expm
-from joblib import Parallel, delayed
-from typing import List, Dict, Any, Tuple, Optional, Callable
 from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
 import matplotlib.pyplot as plt
+import numpy as np
+from joblib import Parallel, delayed
+from scipy.linalg import expm
 
 # =============================================================================
 # CONSTANTS AND BASIC DEFINITIONS
@@ -32,6 +33,7 @@ SY = 0.5 * np.array([[0, 1j], [-1j, 0]], dtype=complex)
 # =============================================================================
 # DATA CLASSES FOR CLEAN PARAMETER HANDLING
 # =============================================================================
+
 
 @dataclass
 class PulseShape:
@@ -49,6 +51,7 @@ class PulseShape:
     time_axis : np.ndarray
         Time points for the pulse
     """
+
     amplitude: np.ndarray
     phase: np.ndarray
     frequency: np.ndarray
@@ -58,11 +61,14 @@ class PulseShape:
         """Validate that all arrays have the same length."""
         n_points = len(self.time_axis)
         arrays = [self.amplitude, self.phase, self.frequency]
-        names = ['amplitude', 'phase', 'frequency']
+        names = ["amplitude", "phase", "frequency"]
 
         for array, name in zip(arrays, names):
             if len(array) != n_points:
-                raise ValueError(f"{name} array must match time axis length ({n_points} points)")
+                raise ValueError(
+                    f"{name} array must match time axis length ({n_points} points)"
+                )
+
 
 @dataclass
 class PulseParameters:
@@ -88,6 +94,7 @@ class PulseParameters:
     sy_amplitude : float
         Relative amplitude for Sy component (imaginary part)
     """
+
     flip_angle: float
     duration: float
     shape_type: str
@@ -96,6 +103,7 @@ class PulseParameters:
     n_time_slices: int = 100
     sx_amplitude: float = 1.0
     sy_amplitude: float = 0.0
+
 
 @dataclass
 class DetectionParameters:
@@ -111,13 +119,16 @@ class DetectionParameters:
     detect_axes : List[str]
         Which observables to detect: 'sx', 'sy', 'sz', 's+', 's-'
     """
+
     dt: float
     points: int
-    detect_axes: List[str] = field(default_factory=lambda: ['sx', 'sy'])
+    detect_axes: List[str] = field(default_factory=lambda: ["sx", "sy"])
+
 
 # =============================================================================
 # PULSE SHAPE GENERATORS
 # =============================================================================
+
 
 class PulseShapeFactory:
     """
@@ -128,7 +139,9 @@ class PulseShapeFactory:
     """
 
     @staticmethod
-    def gaussian(duration: float, n_points: int, sigma_factor: float = 4.0) -> PulseShape:
+    def gaussian(
+        duration: float, n_points: int, sigma_factor: float = 4.0
+    ) -> PulseShape:
         """
         Generate a Gaussian pulse shape.
 
@@ -229,8 +242,14 @@ class PulseShapeFactory:
         return PulseShape(amplitude, phase, frequency, time_axis)
 
     @staticmethod
-    def wurst(duration: float, n_points: int, freq_start: float, freq_end: float,
-              wurst_n: int = 40, amplitude_factor: float = 1.0) -> PulseShape:
+    def wurst(
+        duration: float,
+        n_points: int,
+        freq_start: float,
+        freq_end: float,
+        wurst_n: int = 40,
+        amplitude_factor: float = 1.0,
+    ) -> PulseShape:
         """
         Generate a WURST (Wideband, Uniform Rate, Smooth Truncation) pulse.
 
@@ -276,8 +295,14 @@ class PulseShapeFactory:
         return PulseShape(amplitude, phase, frequency, time_axis)
 
     @staticmethod
-    def chirp(duration: float, n_points: int, freq_start: float, freq_end: float,
-              envelope: str = 'gaussian', envelope_params: Dict = None) -> PulseShape:
+    def chirp(
+        duration: float,
+        n_points: int,
+        freq_start: float,
+        freq_end: float,
+        envelope: str = "gaussian",
+        envelope_params: Dict = None,
+    ) -> PulseShape:
         """
         Generate a chirped pulse with frequency sweep and envelope.
 
@@ -314,14 +339,16 @@ class PulseShapeFactory:
         if envelope_params is None:
             envelope_params = {}
 
-        if envelope == 'gaussian':
-            sigma_factor = envelope_params.get('sigma_factor', 4.0)
-            envelope_shape = PulseShapeFactory.gaussian(duration, n_points, sigma_factor)
+        if envelope == "gaussian":
+            sigma_factor = envelope_params.get("sigma_factor", 4.0)
+            envelope_shape = PulseShapeFactory.gaussian(
+                duration, n_points, sigma_factor
+            )
             amplitude = envelope_shape.amplitude
-        elif envelope == 'square':
+        elif envelope == "square":
             amplitude = np.ones_like(time_axis)
-        elif envelope == 'sech':
-            beta = envelope_params.get('beta', 5.0)
+        elif envelope == "sech":
+            beta = envelope_params.get("beta", 5.0)
             envelope_shape = PulseShapeFactory.sech(duration, n_points, beta)
             amplitude = envelope_shape.amplitude
         else:
@@ -330,9 +357,15 @@ class PulseShapeFactory:
         return PulseShape(amplitude, phase, frequency, time_axis)
 
     @staticmethod
-    def noisy(duration: float, n_points: int, base_shape: str = 'gaussian',
-              amp_noise: float = 0.1, phase_noise: float = 0.1,
-              freq_noise: float = 0.0, seed: Optional[int] = None) -> PulseShape:
+    def noisy(
+        duration: float,
+        n_points: int,
+        base_shape: str = "gaussian",
+        amp_noise: float = 0.1,
+        phase_noise: float = 0.1,
+        freq_noise: float = 0.0,
+        seed: Optional[int] = None,
+    ) -> PulseShape:
         """
         Generate a noisy pulse with amplitude/phase/frequency fluctuations.
 
@@ -365,11 +398,11 @@ class PulseShapeFactory:
             np.random.seed(seed)
 
         # Generate base shape
-        if base_shape == 'gaussian':
+        if base_shape == "gaussian":
             base_pulse = PulseShapeFactory.gaussian(duration, n_points)
-        elif base_shape == 'square':
+        elif base_shape == "square":
             base_pulse = PulseShapeFactory.square(duration, n_points)
-        elif base_shape == 'sech':
+        elif base_shape == "sech":
             base_pulse = PulseShapeFactory.sech(duration, n_points)
         else:
             raise ValueError(f"Unknown base shape: {base_shape}")
@@ -389,9 +422,11 @@ class PulseShapeFactory:
 
         return PulseShape(amplitude, phase, frequency, base_pulse.time_axis)
 
+
 # =============================================================================
 # QUANTUM EVOLUTION ENGINE
 # =============================================================================
+
 
 class QuantumEvolution:
     """
@@ -402,9 +437,14 @@ class QuantumEvolution:
     """
 
     @staticmethod
-    def evolve_shaped_pulse(initial_state: np.ndarray, pulse_shape: PulseShape,
-                           flip_angle: float, detuning: float,
-                           sx_amplitude: float = 1.0, sy_amplitude: float = 0.0) -> np.ndarray:
+    def evolve_shaped_pulse(
+        initial_state: np.ndarray,
+        pulse_shape: PulseShape,
+        flip_angle: float,
+        detuning: float,
+        sx_amplitude: float = 1.0,
+        sy_amplitude: float = 0.0,
+    ) -> np.ndarray:
         """
         Evolve a quantum state through a shaped pulse using time slicing.
 
@@ -439,31 +479,43 @@ class QuantumEvolution:
 
         # Calculate amplitude scaling to achieve target flip angle
         amplitude_scale = QuantumEvolution._calculate_amplitude_scaling(
-            pulse_shape.amplitude, pulse_shape.time_axis, flip_angle)
+            pulse_shape.amplitude, pulse_shape.time_axis, flip_angle
+        )
 
         # Normalize multi-axis amplitudes
         sx_norm, sy_norm = QuantumEvolution._normalize_multiaxis_amplitudes(
-            sx_amplitude, sy_amplitude)
+            sx_amplitude, sy_amplitude
+        )
 
         # Evolve through each time slice
         current_state = initial_state.copy()
 
         for i in range(n_slices - 1):
             current_state = QuantumEvolution._evolve_single_slice(
-                current_state, pulse_shape, i, dt, amplitude_scale,
-                detuning, sx_norm, sy_norm)
+                current_state,
+                pulse_shape,
+                i,
+                dt,
+                amplitude_scale,
+                detuning,
+                sx_norm,
+                sy_norm,
+            )
 
         return current_state
 
     @staticmethod
-    def _calculate_amplitude_scaling(amplitude: np.ndarray, time_axis: np.ndarray,
-                                   flip_angle: float) -> float:
+    def _calculate_amplitude_scaling(
+        amplitude: np.ndarray, time_axis: np.ndarray, flip_angle: float
+    ) -> float:
         """Calculate scaling factor to achieve target flip angle."""
         integral_amplitude = np.trapezoid(amplitude, time_axis)
         return flip_angle / integral_amplitude if integral_amplitude > 1e-12 else 0.0
 
     @staticmethod
-    def _normalize_multiaxis_amplitudes(sx_amp: float, sy_amp: float) -> Tuple[float, float]:
+    def _normalize_multiaxis_amplitudes(
+        sx_amp: float, sy_amp: float
+    ) -> Tuple[float, float]:
         """Normalize Sx and Sy amplitudes."""
         total_amplitude = np.sqrt(sx_amp**2 + sy_amp**2)
         if total_amplitude > 1e-12:
@@ -472,9 +524,16 @@ class QuantumEvolution:
             return 1.0, 0.0
 
     @staticmethod
-    def _evolve_single_slice(state: np.ndarray, pulse_shape: PulseShape,
-                           slice_idx: int, dt: float, amplitude_scale: float,
-                           detuning: float, sx_norm: float, sy_norm: float) -> np.ndarray:
+    def _evolve_single_slice(
+        state: np.ndarray,
+        pulse_shape: PulseShape,
+        slice_idx: int,
+        dt: float,
+        amplitude_scale: float,
+        detuning: float,
+        sx_norm: float,
+        sy_norm: float,
+    ) -> np.ndarray:
         """Evolve state through a single time slice."""
         # Get pulse parameters for this slice
         amp = pulse_shape.amplitude[slice_idx] * amplitude_scale
@@ -483,7 +542,8 @@ class QuantumEvolution:
 
         # Build Hamiltonian for this slice
         H_total = QuantumEvolution._build_slice_hamiltonian(
-            amp, phase, freq_offset, detuning, dt, sx_norm, sy_norm)
+            amp, phase, freq_offset, detuning, dt, sx_norm, sy_norm
+        )
 
         # Apply evolution operator
         if np.any(np.abs(H_total) > 1e-12):
@@ -493,9 +553,15 @@ class QuantumEvolution:
             return state
 
     @staticmethod
-    def _build_slice_hamiltonian(amp: float, phase: float, freq_offset: float,
-                               detuning: float, dt: float, sx_norm: float,
-                               sy_norm: float) -> np.ndarray:
+    def _build_slice_hamiltonian(
+        amp: float,
+        phase: float,
+        freq_offset: float,
+        detuning: float,
+        dt: float,
+        sx_norm: float,
+        sy_norm: float,
+    ) -> np.ndarray:
         """Build the Hamiltonian for a single time slice."""
         H_total = np.zeros((2, 2), dtype=complex)
 
@@ -518,8 +584,9 @@ class QuantumEvolution:
         return H_total
 
     @staticmethod
-    def evolve_free_precession(state: np.ndarray, duration: float,
-                             detuning: float) -> np.ndarray:
+    def evolve_free_precession(
+        state: np.ndarray, duration: float, detuning: float
+    ) -> np.ndarray:
         """
         Evolve state during free precession (delay).
 
@@ -542,9 +609,11 @@ class QuantumEvolution:
             return U_delay.conj().T @ state @ U_delay
         return state
 
+
 # =============================================================================
 # SEQUENCE OPERATIONS
 # =============================================================================
+
 
 class SequenceOperation:
     """Base class for sequence operations."""
@@ -552,6 +621,7 @@ class SequenceOperation:
     def execute(self, state: np.ndarray, detuning: float) -> np.ndarray:
         """Execute the operation on a quantum state."""
         raise NotImplementedError("Subclasses must implement execute method")
+
 
 class ShapedPulse(SequenceOperation):
     """
@@ -594,42 +664,45 @@ class ShapedPulse(SequenceOperation):
         params = self.params.shape_params
 
         # Dispatch to appropriate factory method
-        if shape_type == 'gaussian':
-            sigma_factor = params.get('sigma_factor', 4.0)
+        if shape_type == "gaussian":
+            sigma_factor = params.get("sigma_factor", 4.0)
             return PulseShapeFactory.gaussian(duration, n_points, sigma_factor)
 
-        elif shape_type == 'square':
-            rise_time = params.get('rise_time', 0.0)
+        elif shape_type == "square":
+            rise_time = params.get("rise_time", 0.0)
             return PulseShapeFactory.square(duration, n_points, rise_time)
 
-        elif shape_type == 'sech':
-            beta = params.get('beta', 5.0)
+        elif shape_type == "sech":
+            beta = params.get("beta", 5.0)
             return PulseShapeFactory.sech(duration, n_points, beta)
 
-        elif shape_type == 'wurst':
-            freq_start = params.get('freq_start', -5.0)
-            freq_end = params.get('freq_end', 5.0)
-            wurst_n = params.get('wurst_n', 40)
-            amplitude_factor = params.get('amplitude_factor', 1.0)
-            return PulseShapeFactory.wurst(duration, n_points, freq_start,
-                                         freq_end, wurst_n, amplitude_factor)
+        elif shape_type == "wurst":
+            freq_start = params.get("freq_start", -5.0)
+            freq_end = params.get("freq_end", 5.0)
+            wurst_n = params.get("wurst_n", 40)
+            amplitude_factor = params.get("amplitude_factor", 1.0)
+            return PulseShapeFactory.wurst(
+                duration, n_points, freq_start, freq_end, wurst_n, amplitude_factor
+            )
 
-        elif shape_type == 'chirp':
-            freq_start = params.get('freq_start', -5.0)
-            freq_end = params.get('freq_end', 5.0)
-            envelope = params.get('envelope', 'gaussian')
-            envelope_params = params.get('envelope_params', {})
-            return PulseShapeFactory.chirp(duration, n_points, freq_start,
-                                         freq_end, envelope, envelope_params)
+        elif shape_type == "chirp":
+            freq_start = params.get("freq_start", -5.0)
+            freq_end = params.get("freq_end", 5.0)
+            envelope = params.get("envelope", "gaussian")
+            envelope_params = params.get("envelope_params", {})
+            return PulseShapeFactory.chirp(
+                duration, n_points, freq_start, freq_end, envelope, envelope_params
+            )
 
-        elif shape_type == 'noisy':
-            base_shape = params.get('base_shape', 'gaussian')
-            amp_noise = params.get('amp_noise', 0.1)
-            phase_noise = params.get('phase_noise', 0.1)
-            freq_noise = params.get('freq_noise', 0.0)
-            seed = params.get('seed', None)
-            return PulseShapeFactory.noisy(duration, n_points, base_shape,
-                                         amp_noise, phase_noise, freq_noise, seed)
+        elif shape_type == "noisy":
+            base_shape = params.get("base_shape", "gaussian")
+            amp_noise = params.get("amp_noise", 0.1)
+            phase_noise = params.get("phase_noise", 0.1)
+            freq_noise = params.get("freq_noise", 0.0)
+            seed = params.get("seed", None)
+            return PulseShapeFactory.noisy(
+                duration, n_points, base_shape, amp_noise, phase_noise, freq_noise, seed
+            )
         else:
             raise ValueError(f"Unknown pulse shape type: {shape_type}")
 
@@ -657,12 +730,18 @@ class ShapedPulse(SequenceOperation):
                 pulse_shape.amplitude,
                 pulse_shape.phase + self.params.phase_offset,
                 pulse_shape.frequency,
-                pulse_shape.time_axis
+                pulse_shape.time_axis,
             )
 
         return QuantumEvolution.evolve_shaped_pulse(
-            state, pulse_shape, self.params.flip_angle, detuning,
-            self.params.sx_amplitude, self.params.sy_amplitude)
+            state,
+            pulse_shape,
+            self.params.flip_angle,
+            detuning,
+            self.params.sx_amplitude,
+            self.params.sy_amplitude,
+        )
+
 
 class Delay(SequenceOperation):
     """
@@ -698,9 +777,11 @@ class Delay(SequenceOperation):
         """
         return QuantumEvolution.evolve_free_precession(state, self.duration, detuning)
 
+
 # =============================================================================
 # MAIN SEQUENCE CLASS
 # =============================================================================
+
 
 class ShapedPulseSequence:
     """
@@ -723,10 +804,17 @@ class ShapedPulseSequence:
         self.operations: List[SequenceOperation] = []
         self.detection_params: Optional[DetectionParameters] = None
 
-    def add_shaped_pulse(self, flip_angle: float, duration: float, shape_type: str,
-                        shape_params: Dict = None, phase_offset: float = 0.0,
-                        n_time_slices: int = 100, sx_amplitude: float = 1.0,
-                        sy_amplitude: float = 0.0) -> 'ShapedPulseSequence':
+    def add_shaped_pulse(
+        self,
+        flip_angle: float,
+        duration: float,
+        shape_type: str,
+        shape_params: Dict = None,
+        phase_offset: float = 0.0,
+        n_time_slices: int = 100,
+        sx_amplitude: float = 1.0,
+        sy_amplitude: float = 0.0,
+    ) -> "ShapedPulseSequence":
         """
         Add a shaped pulse to the sequence.
 
@@ -765,13 +853,13 @@ class ShapedPulseSequence:
             phase_offset=phase_offset,
             n_time_slices=n_time_slices,
             sx_amplitude=sx_amplitude,
-            sy_amplitude=sy_amplitude
+            sy_amplitude=sy_amplitude,
         )
 
         self.operations.append(ShapedPulse(params))
         return self
 
-    def add_delay(self, duration: float) -> 'ShapedPulseSequence':
+    def add_delay(self, duration: float) -> "ShapedPulseSequence":
         """
         Add a delay (free precession) to the sequence.
 
@@ -788,8 +876,9 @@ class ShapedPulseSequence:
         self.operations.append(Delay(duration))
         return self
 
-    def set_detection(self, dt: float, points: int,
-                     detect_axes: List[str] = None) -> 'ShapedPulseSequence':
+    def set_detection(
+        self, dt: float, points: int, detect_axes: List[str] = None
+    ) -> "ShapedPulseSequence":
         """
         Set parameters for signal detection.
 
@@ -808,17 +897,16 @@ class ShapedPulseSequence:
             Self (for method chaining)
         """
         if detect_axes is None:
-            detect_axes = ['sx', 'sy']
+            detect_axes = ["sx", "sy"]
 
         self.detection_params = DetectionParameters(
-            dt=dt,
-            points=points,
-            detect_axes=detect_axes
+            dt=dt, points=points, detect_axes=detect_axes
         )
         return self
 
-    def simulate_single_detuning(self, detuning: float,
-                               initial_state: Optional[np.ndarray] = None) -> Dict[str, np.ndarray]:
+    def simulate_single_detuning(
+        self, detuning: float, initial_state: Optional[np.ndarray] = None
+    ) -> Dict[str, np.ndarray]:
         """
         Simulate the sequence for a single detuning value.
 
@@ -850,7 +938,9 @@ class ShapedPulseSequence:
         # Perform detection
         return self._detect_signals(current_state, detuning)
 
-    def _detect_signals(self, final_state: np.ndarray, detuning: float) -> Dict[str, np.ndarray]:
+    def _detect_signals(
+        self, final_state: np.ndarray, detuning: float
+    ) -> Dict[str, np.ndarray]:
         """Detect signals after sequence execution."""
         dt = self.detection_params.dt
         points = self.detection_params.points
@@ -859,7 +949,7 @@ class ShapedPulseSequence:
         # Initialize signal arrays
         signals = {}
         for axis in detect_axes:
-            dtype = complex if axis in ['s+', 's-'] else float
+            dtype = complex if axis in ["s+", "s-"] else float
             signals[axis] = np.zeros(points, dtype=dtype)
 
         # Evolution operator for detection
@@ -878,22 +968,24 @@ class ShapedPulseSequence:
 
     def _measure_observable(self, state: np.ndarray, observable: str) -> complex:
         """Measure a specific observable on the state."""
-        if observable == 'sx':
+        if observable == "sx":
             return np.real(np.trace(state @ SX))
-        elif observable == 'sy':
+        elif observable == "sy":
             return np.real(np.trace(state @ SY))
-        elif observable == 'sz':
+        elif observable == "sz":
             return np.real(np.trace(state @ SZ))
-        elif observable == 's+':
+        elif observable == "s+":
             return np.trace(state @ (SX + 1j * SY))
-        elif observable == 's-':
+        elif observable == "s-":
             return np.trace(state @ (SX - 1j * SY))
         else:
             raise ValueError(f"Unknown observable: {observable}")
 
+
 # =============================================================================
 # MAIN SIMULATOR CLASS
 # =============================================================================
+
 
 class ShapedSpinEchoSimulator:
     """
@@ -914,11 +1006,14 @@ class ShapedSpinEchoSimulator:
         """
         self.n_jobs = n_jobs
 
-    def simulate_sequence(self, sequence: ShapedPulseSequence,
-                         detuning_range: Tuple[float, float] = (-10.0, 10.0),
-                         detuning_points: int = 101,
-                         linewidth: float = 2.0,
-                         distribution_type: str = "gaussian") -> Dict[str, np.ndarray]:
+    def simulate_sequence(
+        self,
+        sequence: ShapedPulseSequence,
+        detuning_range: Tuple[float, float] = (-10.0, 10.0),
+        detuning_points: int = 101,
+        linewidth: float = 2.0,
+        distribution_type: str = "gaussian",
+    ) -> Dict[str, np.ndarray]:
         """
         Simulate a shaped pulse sequence over a range of detuning values.
 
@@ -942,30 +1037,39 @@ class ShapedSpinEchoSimulator:
         """
         # Generate detuning values and weights
         detuning_values, weights = self._generate_detuning_distribution(
-            detuning_range, detuning_points, linewidth, distribution_type)
+            detuning_range, detuning_points, linewidth, distribution_type
+        )
 
         # Parallel simulation over all detuning values
         if self.n_jobs == 1:
             # Serial execution for debugging
-            results_list = [sequence.simulate_single_detuning(delta)
-                          for delta in detuning_values]
+            results_list = [
+                sequence.simulate_single_detuning(delta) for delta in detuning_values
+            ]
         else:
             # Parallel execution
             results_list = Parallel(n_jobs=self.n_jobs, verbose=1)(
                 delayed(sequence.simulate_single_detuning)(delta)
-                for delta in detuning_values)
+                for delta in detuning_values
+            )
 
         # Aggregate results with proper weighting
-        return self._aggregate_results(results_list, weights, sequence.detection_params.detect_axes)
+        return self._aggregate_results(
+            results_list, weights, sequence.detection_params.detect_axes
+        )
 
-    def _generate_detuning_distribution(self, detuning_range: Tuple[float, float],
-                                      n_points: int, linewidth: float,
-                                      distribution_type: str) -> Tuple[np.ndarray, np.ndarray]:
+    def _generate_detuning_distribution(
+        self,
+        detuning_range: Tuple[float, float],
+        n_points: int,
+        linewidth: float,
+        distribution_type: str,
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Generate detuning values and corresponding weights."""
         detuning_values = np.linspace(detuning_range[0], detuning_range[1], n_points)
 
         if distribution_type == "gaussian":
-            weights = np.exp(-(detuning_values / linewidth) ** 2)
+            weights = np.exp(-((detuning_values / linewidth) ** 2))
         elif distribution_type == "lorentzian":
             weights = 1.0 / (1.0 + (detuning_values / linewidth) ** 2)
         elif distribution_type == "uniform":
@@ -978,8 +1082,9 @@ class ShapedSpinEchoSimulator:
 
         return detuning_values, weights
 
-    def _aggregate_results(self, results_list: List[Dict], weights: np.ndarray,
-                         observables: List[str]) -> Dict[str, np.ndarray]:
+    def _aggregate_results(
+        self, results_list: List[Dict], weights: np.ndarray, observables: List[str]
+    ) -> Dict[str, np.ndarray]:
         """Aggregate simulation results with proper weighting."""
         final_signals = {}
 
@@ -993,9 +1098,11 @@ class ShapedSpinEchoSimulator:
 
         return final_signals
 
+
 # =============================================================================
 # CONVENIENCE FUNCTIONS AND BUILDERS
 # =============================================================================
+
 
 class SequenceBuilder:
     """
@@ -1005,9 +1112,14 @@ class SequenceBuilder:
     """
 
     @staticmethod
-    def hahn_echo(tau: float, pulse_duration: float = 1.0,
-                  pulse_shape: str = 'gaussian', shape_params: Dict = None,
-                  dt: float = 0.01, points: int = 800) -> ShapedPulseSequence:
+    def hahn_echo(
+        tau: float,
+        pulse_duration: float = 1.0,
+        pulse_shape: str = "gaussian",
+        shape_params: Dict = None,
+        dt: float = 0.01,
+        points: int = 800,
+    ) -> ShapedPulseSequence:
         """
         Create a Hahn echo sequence: π/2 - τ - π.
 
@@ -1032,18 +1144,26 @@ class SequenceBuilder:
             Complete Hahn echo sequence
         """
         if shape_params is None:
-            shape_params = {'sigma_factor': 4.0} if pulse_shape == 'gaussian' else {}
+            shape_params = {"sigma_factor": 4.0} if pulse_shape == "gaussian" else {}
 
-        return (ShapedPulseSequence("Hahn Echo")
-                .add_shaped_pulse(np.pi/2, pulse_duration, pulse_shape, shape_params)
-                .add_delay(tau)
-                .add_shaped_pulse(np.pi, pulse_duration, pulse_shape, shape_params)
-                .set_detection(dt, points))
+        return (
+            ShapedPulseSequence("Hahn Echo")
+            .add_shaped_pulse(np.pi / 2, pulse_duration, pulse_shape, shape_params)
+            .add_delay(tau)
+            .add_shaped_pulse(np.pi, pulse_duration, pulse_shape, shape_params)
+            .set_detection(dt, points)
+        )
 
     @staticmethod
-    def wurst_echo(tau: float, pulse_duration: float = 2.0,
-                   freq_start: float = -8.0, freq_end: float = 8.0,
-                   wurst_n: int = 40, dt: float = 0.01, points: int = 800) -> ShapedPulseSequence:
+    def wurst_echo(
+        tau: float,
+        pulse_duration: float = 2.0,
+        freq_start: float = -8.0,
+        freq_end: float = 8.0,
+        wurst_n: int = 40,
+        dt: float = 0.01,
+        points: int = 800,
+    ) -> ShapedPulseSequence:
         """
         Create a WURST echo sequence for broadband excitation.
 
@@ -1070,20 +1190,24 @@ class SequenceBuilder:
             Complete WURST echo sequence
         """
         wurst_params = {
-            'freq_start': freq_start,
-            'freq_end': freq_end,
-            'wurst_n': wurst_n
+            "freq_start": freq_start,
+            "freq_end": freq_end,
+            "wurst_n": wurst_n,
         }
 
-        return (ShapedPulseSequence("WURST Echo")
-                .add_shaped_pulse(np.pi/2, pulse_duration, 'wurst', wurst_params)
-                .add_delay(tau)
-                .add_shaped_pulse(np.pi, pulse_duration, 'wurst', wurst_params)
-                .set_detection(dt, points))
+        return (
+            ShapedPulseSequence("WURST Echo")
+            .add_shaped_pulse(np.pi / 2, pulse_duration, "wurst", wurst_params)
+            .add_delay(tau)
+            .add_shaped_pulse(np.pi, pulse_duration, "wurst", wurst_params)
+            .set_detection(dt, points)
+        )
+
 
 # =============================================================================
 # UTILITY FUNCTIONS
 # =============================================================================
+
 
 def plot_pulse_shape(pulse_shape: PulseShape, title: str = "Pulse Shape") -> None:
     """
@@ -1099,24 +1223,25 @@ def plot_pulse_shape(pulse_shape: PulseShape, title: str = "Pulse Shape") -> Non
     fig, axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
 
     # Amplitude
-    axes[0].plot(pulse_shape.time_axis, pulse_shape.amplitude, 'b-', linewidth=2)
-    axes[0].set_ylabel('Amplitude')
+    axes[0].plot(pulse_shape.time_axis, pulse_shape.amplitude, "b-", linewidth=2)
+    axes[0].set_ylabel("Amplitude")
     axes[0].set_title(title)
     axes[0].grid(True, alpha=0.3)
 
     # Phase
-    axes[1].plot(pulse_shape.time_axis, pulse_shape.phase, 'r-', linewidth=2)
-    axes[1].set_ylabel('Phase (rad)')
+    axes[1].plot(pulse_shape.time_axis, pulse_shape.phase, "r-", linewidth=2)
+    axes[1].set_ylabel("Phase (rad)")
     axes[1].grid(True, alpha=0.3)
 
     # Frequency
-    axes[2].plot(pulse_shape.time_axis, pulse_shape.frequency, 'g-', linewidth=2)
-    axes[2].set_ylabel('Frequency')
-    axes[2].set_xlabel('Time')
+    axes[2].plot(pulse_shape.time_axis, pulse_shape.frequency, "g-", linewidth=2)
+    axes[2].set_ylabel("Frequency")
+    axes[2].set_xlabel("Time")
     axes[2].grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
+
 
 # =============================================================================
 # EXAMPLE USAGE
@@ -1130,20 +1255,24 @@ if __name__ == "__main__":
 
     # Example 1: Gaussian Hahn echo
     print("1. Gaussian Hahn echo")
-    gaussian_seq = SequenceBuilder.hahn_echo(tau=5.0, pulse_duration=1.0,
-                                           pulse_shape='gaussian')
+    gaussian_seq = SequenceBuilder.hahn_echo(
+        tau=5.0, pulse_duration=1.0, pulse_shape="gaussian"
+    )
 
     # Visualize pulse shape
     gaussian_pulse = gaussian_seq.operations[0].get_pulse_shape()
     plot_pulse_shape(gaussian_pulse, "Gaussian π/2 Pulse")
 
     # Simulate
-    signals1 = simulator.simulate_sequence(gaussian_seq, linewidth=2.0, detuning_points=51)
+    signals1 = simulator.simulate_sequence(
+        gaussian_seq, linewidth=2.0, detuning_points=51
+    )
 
     # Example 2: WURST echo
     print("\n2. WURST echo")
-    wurst_seq = SequenceBuilder.wurst_echo(tau=5.0, pulse_duration=2.0,
-                                         freq_start=-5.0, freq_end=5.0)
+    wurst_seq = SequenceBuilder.wurst_echo(
+        tau=5.0, pulse_duration=2.0, freq_start=-5.0, freq_end=5.0
+    )
 
     # Visualize pulse shape
     wurst_pulse = wurst_seq.operations[0].get_pulse_shape()
@@ -1158,20 +1287,20 @@ if __name__ == "__main__":
     plt.figure(figsize=(12, 6))
 
     plt.subplot(1, 2, 1)
-    plt.plot(time_axis, np.real(signals1['sx']), 'b-', label='Gaussian Sx')
-    plt.plot(time_axis, np.real(signals1['sy']), 'r-', label='Gaussian Sy')
-    plt.xlabel('Time')
-    plt.ylabel('Signal')
-    plt.title('Gaussian Echo')
+    plt.plot(time_axis, np.real(signals1["sx"]), "b-", label="Gaussian Sx")
+    plt.plot(time_axis, np.real(signals1["sy"]), "r-", label="Gaussian Sy")
+    plt.xlabel("Time")
+    plt.ylabel("Signal")
+    plt.title("Gaussian Echo")
     plt.legend()
     plt.grid(True, alpha=0.3)
 
     plt.subplot(1, 2, 2)
-    plt.plot(time_axis, np.real(signals2['sx']), 'b-', label='WURST Sx')
-    plt.plot(time_axis, np.real(signals2['sy']), 'r-', label='WURST Sy')
-    plt.xlabel('Time')
-    plt.ylabel('Signal')
-    plt.title('WURST Echo')
+    plt.plot(time_axis, np.real(signals2["sx"]), "b-", label="WURST Sx")
+    plt.plot(time_axis, np.real(signals2["sy"]), "r-", label="WURST Sy")
+    plt.xlabel("Time")
+    plt.ylabel("Signal")
+    plt.title("WURST Echo")
     plt.legend()
     plt.grid(True, alpha=0.3)
 

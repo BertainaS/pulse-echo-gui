@@ -5,9 +5,10 @@ Tests the flexible sequence framework including SequenceBuilder,
 PulseParameters, and SpinEchoSimulator.
 """
 
-import pytest
 import numpy as np
-from pulseechogui import SequenceBuilder, PulseParameters, DelayParameters
+import pytest
+
+from pulseechogui import DelayParameters, PulseParameters, SequenceBuilder
 
 
 class TestPulseParameters:
@@ -114,9 +115,7 @@ class TestSequenceBuilder:
 class TestPhysicsValidation:
     """Test physics validation functions."""
 
-    def test_density_matrix_validation(
-        self, equilibrium_state, validation_functions
-    ):
+    def test_density_matrix_validation(self, equilibrium_state, validation_functions):
         """Test that equilibrium state is valid density matrix."""
         validate = validation_functions["density_matrix"]
         assert validate(equilibrium_state)

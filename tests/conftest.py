@@ -2,9 +2,8 @@
 Pytest configuration and shared fixtures for PulseEchoGui tests.
 """
 
-import pytest
 import numpy as np
-
+import pytest
 
 # Pauli matrices (same convention as code)
 SX = 0.5 * np.array([[0, 1], [1, 0]], dtype=complex)
@@ -52,7 +51,7 @@ def tolerance():
     """Provide numerical tolerance for comparisons."""
     return {
         "atol": 1e-10,  # Absolute tolerance
-        "rtol": 1e-8,   # Relative tolerance
+        "rtol": 1e-8,  # Relative tolerance
     }
 
 

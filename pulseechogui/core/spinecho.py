@@ -9,48 +9,58 @@ arbitrary pulse sequences in NMR/ESR experiments.
 @author: sylvainbertaina
 """
 
-import numpy as np
-from scipy.linalg import expm
-from joblib import Parallel, delayed
-from typing import List, Dict, Any, Tuple, Optional, Union
-from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+from joblib import Parallel, delayed
+from scipy.linalg import expm
 
 # Pauli matrices (global constants)
 SZ = 0.5 * np.array([[1, 0], [0, -1]], dtype=complex)
 SX = 0.5 * np.array([[0, 1], [1, 0]], dtype=complex)
 SY = 0.5 * np.array([[0, 1j], [-1j, 0]], dtype=complex)
 
+
 @dataclass
 class PulseParameters:
     """Parameters for a pulse operation"""
+
     flip_angle: float  # radians
     phase: float = 0.0  # radians
     amplitude: float = 1.0  # relative amplitude (h1 scaling)
     pulse_type: str = "hard"  # "hard" or "soft"
     duration: Optional[float] = None  # for soft pulses
 
+
 @dataclass
 class DelayParameters:
     """Parameters for a delay/evolution operation"""
+
     duration: float  # time units
+
 
 @dataclass
 class DetectionParameters:
     """Parameters for signal detection"""
+
     time_step: float
     num_points: int
-    observables: List[str] = field(default_factory=lambda: ['sx', 'sy'])
+    observables: List[str] = field(default_factory=lambda: ["sx", "sy"])
+
 
 class QuantumEvolution:
     """Handles quantum mechanical evolution operations"""
 
     @staticmethod
-    def evolution_operator(theta_x: float, theta_z: float, phase: float = 0.0) -> np.ndarray:
+    def evolution_operator(
+        theta_x: float, theta_z: float, phase: float = 0.0
+    ) -> np.ndarray:
         """Create evolution operator U = exp(-i(theta_x*sigma_x + theta_z*sigma_z))"""
         if abs(theta_x) > 1e-12:
-            cos_half = np.cos(theta_x/2)
-            sin_half = np.sin(theta_x/2)
+            cos_half = np.cos(theta_x / 2)
+            sin_half = np.sin(theta_x / 2)
             if abs(phase) > 1e-12:
                 pulse_op = np.cos(phase) * SX + np.sin(phase) * SY
             else:
@@ -67,7 +77,9 @@ class QuantumEvolution:
         return Uz @ Ux
 
     @staticmethod
-    def apply_pulse(rho: np.ndarray, params: PulseParameters, delta: float) -> np.ndarray:
+    def apply_pulse(
+        rho: np.ndarray, params: PulseParameters, delta: float
+    ) -> np.ndarray:
         """Apply a pulse to the density matrix"""
         theta_x = params.flip_angle * params.amplitude
 
@@ -89,29 +101,34 @@ class QuantumEvolution:
             return U_soft.conj().T @ rho @ U_soft
 
     @staticmethod
-    def apply_delay(rho: np.ndarray, params: DelayParameters, delta: float) -> np.ndarray:
+    def apply_delay(
+        rho: np.ndarray, params: DelayParameters, delta: float
+    ) -> np.ndarray:
         """Apply free evolution delay"""
         U_delay = QuantumEvolution.evolution_operator(0, delta * params.duration, 0)
         return U_delay.conj().T @ rho @ U_delay
 
     @staticmethod
-    def measure_observables(rho: np.ndarray, observables: List[str]) -> Dict[str, float]:
+    def measure_observables(
+        rho: np.ndarray, observables: List[str]
+    ) -> Dict[str, float]:
         """Measure specified observables on the density matrix"""
         measurements = {}
         for obs in observables:
-            if obs == 'sx':
+            if obs == "sx":
                 measurements[obs] = np.real(np.trace(rho @ SX))
-            elif obs == 'sy':
+            elif obs == "sy":
                 measurements[obs] = np.real(np.trace(rho @ SY))
-            elif obs == 'sz':
+            elif obs == "sz":
                 measurements[obs] = np.real(np.trace(rho @ SZ))
-            elif obs == 's+':
+            elif obs == "s+":
                 measurements[obs] = np.trace(rho @ (SX + 1j * SY))
-            elif obs == 's-':
+            elif obs == "s-":
                 measurements[obs] = np.trace(rho @ (SX - 1j * SY))
             else:
                 raise ValueError(f"Unknown observable: {obs}")
         return measurements
+
 
 class SequenceOperation(ABC):
     """Abstract base class for sequence operations"""
@@ -120,6 +137,7 @@ class SequenceOperation(ABC):
     def execute(self, rho: np.ndarray, delta: float) -> np.ndarray:
         """Execute the operation on the density matrix"""
         pass
+
 
 class PulseOperation(SequenceOperation):
     """Pulse operation in a sequence"""
@@ -130,6 +148,7 @@ class PulseOperation(SequenceOperation):
     def execute(self, rho: np.ndarray, delta: float) -> np.ndarray:
         return QuantumEvolution.apply_pulse(rho, self.params, delta)
 
+
 class DelayOperation(SequenceOperation):
     """Delay operation in a sequence"""
 
@@ -139,6 +158,7 @@ class DelayOperation(SequenceOperation):
     def execute(self, rho: np.ndarray, delta: float) -> np.ndarray:
         return QuantumEvolution.apply_delay(rho, self.params, delta)
 
+
 class PulseSequence:
     """Represents a complete pulse sequence"""
 
@@ -147,28 +167,37 @@ class PulseSequence:
         self.operations: List[SequenceOperation] = []
         self.detection_params: Optional[DetectionParameters] = None
 
-    def add_pulse(self, flip_angle: float, phase: float = 0.0, amplitude: float = 1.0,
-                  pulse_type: str = "hard", duration: Optional[float] = None) -> 'PulseSequence':
+    def add_pulse(
+        self,
+        flip_angle: float,
+        phase: float = 0.0,
+        amplitude: float = 1.0,
+        pulse_type: str = "hard",
+        duration: Optional[float] = None,
+    ) -> "PulseSequence":
         """Add a pulse to the sequence (fluent interface)"""
         params = PulseParameters(flip_angle, phase, amplitude, pulse_type, duration)
         self.operations.append(PulseOperation(params))
         return self
 
-    def add_delay(self, duration: float) -> 'PulseSequence':
+    def add_delay(self, duration: float) -> "PulseSequence":
         """Add a delay to the sequence (fluent interface)"""
         params = DelayParameters(duration)
         self.operations.append(DelayOperation(params))
         return self
 
-    def set_detection(self, time_step: float, num_points: int,
-                     observables: List[str] = None) -> 'PulseSequence':
+    def set_detection(
+        self, time_step: float, num_points: int, observables: List[str] = None
+    ) -> "PulseSequence":
         """Set detection parameters"""
         if observables is None:
-            observables = ['sx', 'sy']
+            observables = ["sx", "sy"]
         self.detection_params = DetectionParameters(time_step, num_points, observables)
         return self
 
-    def simulate(self, delta: float, initial_state: Optional[np.ndarray] = None) -> Dict[str, np.ndarray]:
+    def simulate(
+        self, delta: float, initial_state: Optional[np.ndarray] = None
+    ) -> Dict[str, np.ndarray]:
         """Simulate the complete sequence for a given detuning"""
         if self.detection_params is None:
             raise ValueError("Detection parameters must be set before simulation")
@@ -188,8 +217,10 @@ class PulseSequence:
         points = self.detection_params.num_points
         observables = self.detection_params.observables
 
-        signals = {obs: np.zeros(points, dtype=complex if obs in ['s+', 's-'] else float)
-                  for obs in observables}
+        signals = {
+            obs: np.zeros(points, dtype=complex if obs in ["s+", "s-"] else float)
+            for obs in observables
+        }
 
         U_evolution = QuantumEvolution.evolution_operator(0, delta * dt, 0)
 
@@ -201,15 +232,17 @@ class PulseSequence:
 
         return signals
 
+
 class SpinDistribution:
     """Handles spin distribution calculations"""
 
     @staticmethod
-    def calculate_weights(delta_values: np.ndarray, linewidth: float,
-                         distribution_type: str = "gaussian") -> np.ndarray:
+    def calculate_weights(
+        delta_values: np.ndarray, linewidth: float, distribution_type: str = "gaussian"
+    ) -> np.ndarray:
         """Calculate distribution weights for given detuning values"""
         if distribution_type == "gaussian":
-            return np.exp(-(delta_values / linewidth) ** 2)
+            return np.exp(-((delta_values / linewidth) ** 2))
         elif distribution_type == "lorentzian":
             return 1.0 / (1.0 + (delta_values / linewidth) ** 2)
         elif distribution_type == "exponential":
@@ -219,22 +252,30 @@ class SpinDistribution:
         else:
             raise ValueError(f"Unknown distribution type: {distribution_type}")
 
+
 class SpinEchoSimulator:
     """Main simulator class for spin echo experiments"""
 
     def __init__(self, n_jobs: int = -1):
         self.n_jobs = n_jobs
 
-    def simulate_sequence(self, sequence: PulseSequence,
-                         detuning_range: Tuple[float, float] = (-10.0, 10.0),
-                         detuning_points: int = 101,
-                         linewidth: float = 2.0,
-                         distribution_type: str = "gaussian") -> Dict[str, np.ndarray]:
+    def simulate_sequence(
+        self,
+        sequence: PulseSequence,
+        detuning_range: Tuple[float, float] = (-10.0, 10.0),
+        detuning_points: int = 101,
+        linewidth: float = 2.0,
+        distribution_type: str = "gaussian",
+    ) -> Dict[str, np.ndarray]:
         """Simulate a pulse sequence over a range of detuning values"""
 
         # Generate detuning values and weights
-        delta_values = np.linspace(detuning_range[0], detuning_range[1], detuning_points)
-        weights = SpinDistribution.calculate_weights(delta_values, linewidth, distribution_type)
+        delta_values = np.linspace(
+            detuning_range[0], detuning_range[1], detuning_points
+        )
+        weights = SpinDistribution.calculate_weights(
+            delta_values, linewidth, distribution_type
+        )
         weights = weights / np.sum(weights)  # Normalize
 
         # Parallel simulation over detuning values
@@ -252,84 +293,129 @@ class SpinEchoSimulator:
         final_signals = {}
         for obs in observables:
             # Stack all signals for this observable
-            signals_array = np.array([result[obs] for result in results_list])  # (detuning_points, time_points)
+            signals_array = np.array(
+                [result[obs] for result in results_list]
+            )  # (detuning_points, time_points)
             # Apply weights and sum over detuning values
             weighted_signals = signals_array.T * weights  # Broadcasting
             final_signals[obs] = np.sum(weighted_signals, axis=1)
 
         return final_signals
 
+
 # Predefined sequence builders
 class SequenceBuilder:
     """Factory class for common pulse sequences"""
 
     @staticmethod
-    def hahn_echo(tau: float, dt: float = 0.01, points: int = 800,
-                  h1: float = 1.0, phase_90: float = 0.0, phase_180: float = 0.0,
-                  pulse_type: str = "hard") -> PulseSequence:
+    def hahn_echo(
+        tau: float,
+        dt: float = 0.01,
+        points: int = 800,
+        h1: float = 1.0,
+        phase_90: float = 0.0,
+        phase_180: float = 0.0,
+        pulse_type: str = "hard",
+    ) -> PulseSequence:
         """Build a 2-pulse Hahn echo: �/2 - � - � - detection"""
         sequence = PulseSequence("Hahn Echo")
-        sequence.add_pulse(np.pi/2 * h1, phase_90, pulse_type=pulse_type)
+        sequence.add_pulse(np.pi / 2 * h1, phase_90, pulse_type=pulse_type)
         sequence.add_delay(tau)
         sequence.add_pulse(np.pi * h1, phase_180, pulse_type=pulse_type)
         sequence.set_detection(dt, points)
         return sequence
 
     @staticmethod
-    def stimulated_echo(tau1: float, tau2: float, dt: float = 0.01, points: int = 800,
-                       h1: float = 1.0, phases: Tuple[float, float, float] = (0.0, np.pi/2, 0.0),
-                       pulse_type: str = "hard") -> PulseSequence:
+    def stimulated_echo(
+        tau1: float,
+        tau2: float,
+        dt: float = 0.01,
+        points: int = 800,
+        h1: float = 1.0,
+        phases: Tuple[float, float, float] = (0.0, np.pi / 2, 0.0),
+        pulse_type: str = "hard",
+    ) -> PulseSequence:
         """Build a 3-pulse stimulated echo: �/2 - �1 - �/2 - �2 - �/2 - detection"""
         sequence = PulseSequence("Stimulated Echo")
-        sequence.add_pulse(np.pi/2 * h1, phases[0], pulse_type=pulse_type)
+        sequence.add_pulse(np.pi / 2 * h1, phases[0], pulse_type=pulse_type)
         sequence.add_delay(tau1)
-        sequence.add_pulse(np.pi/2 * h1, phases[1], pulse_type=pulse_type)
+        sequence.add_pulse(np.pi / 2 * h1, phases[1], pulse_type=pulse_type)
         sequence.add_delay(tau2)
-        sequence.add_pulse(np.pi/2 * h1, phases[2], pulse_type=pulse_type)
+        sequence.add_pulse(np.pi / 2 * h1, phases[2], pulse_type=pulse_type)
         sequence.set_detection(dt, points)
         return sequence
 
     @staticmethod
-    def inversion_recovery(tau: float, dt: float = 0.01, points: int = 800,
-                          h1: float = 1.0, pulse_type: str = "hard") -> PulseSequence:
+    def inversion_recovery(
+        tau: float,
+        dt: float = 0.01,
+        points: int = 800,
+        h1: float = 1.0,
+        pulse_type: str = "hard",
+    ) -> PulseSequence:
         """Build inversion recovery: � - � - �/2 - detection"""
         sequence = PulseSequence("Inversion Recovery")
         sequence.add_pulse(np.pi * h1, 0.0, pulse_type=pulse_type)
         sequence.add_delay(tau)
-        sequence.add_pulse(np.pi/2 * h1, 0.0, pulse_type=pulse_type)
+        sequence.add_pulse(np.pi / 2 * h1, 0.0, pulse_type=pulse_type)
         sequence.set_detection(dt, points)
         return sequence
 
-def plot_signals(time_axis: np.ndarray, signals: Dict[str, np.ndarray],
-                title: str = "Spin Echo Signals", show_components: bool = True):
+
+def plot_signals(
+    time_axis: np.ndarray,
+    signals: Dict[str, np.ndarray],
+    title: str = "Spin Echo Signals",
+    show_components: bool = True,
+):
     """Plot simulation results"""
     import matplotlib.pyplot as plt
 
     plt.figure(figsize=(10, 6))
 
-    colors = {'sx': 'blue', 'sy': 'red', 'sz': 'green', 's+': 'purple', 's-': 'orange'}
+    colors = {"sx": "blue", "sy": "red", "sz": "green", "s+": "purple", "s-": "orange"}
 
     for obs, signal in signals.items():
-        color = colors.get(obs, 'black')
+        color = colors.get(obs, "black")
         if np.iscomplexobj(signal):
             if show_components:
-                plt.plot(time_axis, np.real(signal), color=color, linewidth=2,
-                        label=f'{obs} (Real)', alpha=0.8)
-                plt.plot(time_axis, np.imag(signal), color=color, linewidth=2,
-                        linestyle='--', label=f'{obs} (Imag)', alpha=0.6)
+                plt.plot(
+                    time_axis,
+                    np.real(signal),
+                    color=color,
+                    linewidth=2,
+                    label=f"{obs} (Real)",
+                    alpha=0.8,
+                )
+                plt.plot(
+                    time_axis,
+                    np.imag(signal),
+                    color=color,
+                    linewidth=2,
+                    linestyle="--",
+                    label=f"{obs} (Imag)",
+                    alpha=0.6,
+                )
             else:
-                plt.plot(time_axis, np.abs(signal), color=color, linewidth=2,
-                        label=f'|{obs}|', alpha=0.8)
+                plt.plot(
+                    time_axis,
+                    np.abs(signal),
+                    color=color,
+                    linewidth=2,
+                    label=f"|{obs}|",
+                    alpha=0.8,
+                )
         else:
             plt.plot(time_axis, signal, color=color, linewidth=2, label=obs, alpha=0.8)
 
-    plt.xlabel('Time', fontsize=14)
-    plt.ylabel('Signal Amplitude', fontsize=14)
-    plt.title(title, fontsize=16, fontweight='bold')
+    plt.xlabel("Time", fontsize=14)
+    plt.ylabel("Signal Amplitude", fontsize=14)
+    plt.title(title, fontsize=16, fontweight="bold")
     plt.grid(True, alpha=0.3)
     plt.legend()
     plt.tight_layout()
     plt.show()
+
 
 # Example usage and demonstration
 if __name__ == "__main__":
@@ -347,13 +433,15 @@ if __name__ == "__main__":
 
     # Example 2: Custom sequence with soft pulses
     print("\n2. Custom sequence with soft pulses")
-    custom_seq = (PulseSequence("Custom Soft Pulse")
-                  .add_pulse(np.pi/2, phase=0.0, pulse_type="soft", duration=2.0)
-                  .add_delay(3.0)
-                  .add_pulse(np.pi, phase=np.pi/2, pulse_type="soft", duration=1.5)
-                  .add_delay(2.0)
-                  .add_pulse(np.pi/4, phase=0.0, pulse_type="hard")
-                  .set_detection(0.01, 600))
+    custom_seq = (
+        PulseSequence("Custom Soft Pulse")
+        .add_pulse(np.pi / 2, phase=0.0, pulse_type="soft", duration=2.0)
+        .add_delay(3.0)
+        .add_pulse(np.pi, phase=np.pi / 2, pulse_type="soft", duration=1.5)
+        .add_delay(2.0)
+        .add_pulse(np.pi / 4, phase=0.0, pulse_type="hard")
+        .set_detection(0.01, 600)
+    )
 
     signals2 = simulator.simulate_sequence(custom_seq, linewidth=1.5)
     time_axis2 = np.arange(600) * 0.01
