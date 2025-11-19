@@ -1,0 +1,207 @@
+# ============================================================================
+# Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================================================
+# Virtual Environments
+# ============================================================================
+venv/
+env/
+ENV/
+.venv/
+.env
+env.bak/
+venv.bak/
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ============================================================================
+# Operating System Files
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+
+# ============================================================================
+# Testing and Coverage
+# ============================================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.cache
+
+# ============================================================================
+# Type Checking and Linting
+# ============================================================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+.pyre/
+.pyright/
+
+# Ruff
+.ruff_cache/
+
+# ============================================================================
+# Jupyter Notebooks
+# ============================================================================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Jupyter notebook metadata
+*.nbconvert.ipynb
+
+# ============================================================================
+# Scientific Python / Simulation Results
+# ============================================================================
+# Generated figures and plots (keep documentation images in docs/)
+*.png
+*.pdf
+*.svg
+*.eps
+
+# BUT: Keep figures in docs/ for documentation
+!docs/**/*.png
+!docs/**/*.pdf
+!docs/**/*.svg
+!docs/**/*.eps
+
+# Data files (generated results)
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.mat
+*.dat
+
+# BUT: Keep example/reference data if needed
+!examples/**/reference_*.npy
+!examples/**/reference_*.npz
+
+# ============================================================================
+# Benchmarking and Profiling
+# ============================================================================
+.benchmarks/
+*.prof
+*.lprof
+
+# ============================================================================
+# Documentation Build
+# ============================================================================
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+
+# Sphinx
+docs/build/
+docs/auto_examples/
+docs/modules/
+docs/generated/
+
+# ============================================================================
+# Logs and Databases
+# ============================================================================
+*.log
+*.sql
+*.sqlite
+*.db
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+.~*
+
+# ============================================================================
+# Project-Specific
+# ============================================================================
+# User-specific configuration (if any)
+config.local.py
+settings.local.py
+
+# Large output files
+results/
+output/
+simulations/
+
+# Compiled translations (if internationalization is used)
+*.mo
+*.pot
+
+# ============================================================================
+# Package Manager Locks (optional - uncomment if you don't want to track)
+# ============================================================================
+# poetry.lock
+# Pipfile.lock
+
+CLAUDE.md

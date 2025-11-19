@@ -1,0 +1,13 @@
+# Include documentation and metadata files
+include README.md
+include LICENSE
+include pyproject.toml
+include setup.py
+
+# Include all Python files
+recursive-include pulseechogui *.py
+
+# Exclude cache and compiled files
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store

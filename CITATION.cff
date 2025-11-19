@@ -1,0 +1,86 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "PulseEchoGui: GUI Applications for NMR/ESR Spin Echo Simulation"
+abstract: >
+  PulseEchoGui is a standalone Python package providing graphical user interfaces
+  for simulating Nuclear Magnetic Resonance (NMR) and Electron Spin Resonance (ESR)
+  spin echo experiments. It includes quantum mechanical simulation engines based on
+  density matrix formalism and supports multiple pulse shapes including Gaussian,
+  SECH, WURST, and chirped pulses. The package features three specialized GUI
+  applications with real-time parameter modification, multi-core parallel processing,
+  and comprehensive pulse sequence design capabilities.
+
+authors:
+  - family-names: "Bertaina"
+    given-names: "Sylvain"
+    email: "sylvain.bertaina@cnrs.fr"
+    affiliation: "Centre National de la Recherche Scientifique (CNRS)"
+    orcid: "https://orcid.org/0000-0000-0000-0000"  # Replace with actual ORCID if available
+
+repository-code: "https://github.com/sylvainbertaina/PulseSeq"
+url: "https://github.com/sylvainbertaina/PulseSeq/tree/main/PulseEchoGui"
+version: "1.0.0"
+date-released: "2024-11-02"
+license: MIT
+
+keywords:
+  - NMR
+  - ESR
+  - EPR
+  - "spin echo"
+  - "pulse sequences"
+  - "quantum simulation"
+  - "magnetic resonance"
+  - "density matrix"
+  - "GUI"
+  - "Python"
+  - "shaped pulses"
+  - "WURST"
+  - "adiabatic pulses"
+
+references:
+  - type: software
+    title: "PulseSeq: Comprehensive NMR/ESR Pulse Sequence Simulation Framework"
+    authors:
+      - family-names: "Bertaina"
+        given-names: "Sylvain"
+    repository-code: "https://github.com/sylvainbertaina/PulseSeq"
+    abstract: >
+      Parent project containing PulseEchoGui along with examples, tutorials,
+      and comprehensive documentation for NMR/ESR pulse sequence simulation.
+
+preferred-citation:
+  type: software
+  title: "PulseEchoGui: GUI Applications for NMR/ESR Spin Echo Simulation"
+  authors:
+    - family-names: "Bertaina"
+      given-names: "Sylvain"
+      email: "sylvain.bertaina@cnrs.fr"
+      affiliation: "Centre National de la Recherche Scientifique (CNRS)"
+  year: 2024
+  version: "1.0.0"
+  repository-code: "https://github.com/sylvainbertaina/PulseSeq"
+  license: MIT
+  url: "https://github.com/sylvainbertaina/PulseSeq/tree/main/PulseEchoGui"
+
+# Example citation formats:
+
+# APA Style:
+# Bertaina, S. (2024). PulseEchoGui: GUI Applications for NMR/ESR Spin Echo
+# Simulation (Version 1.0.0) [Computer software].
+# https://github.com/sylvainbertaina/PulseSeq
+
+# BibTeX:
+# @software{bertaina2024pulseechogui,
+#   author = {Bertaina, Sylvain},
+#   title = {PulseEchoGui: GUI Applications for NMR/ESR Spin Echo Simulation},
+#   year = {2024},
+#   version = {1.0.0},
+#   url = {https://github.com/sylvainbertaina/PulseSeq},
+#   license = {MIT}
+# }
+
+# Plain text:
+# Bertaina, S. (2024). PulseEchoGui v1.0.0.
+# Available at: https://github.com/sylvainbertaina/PulseSeq
